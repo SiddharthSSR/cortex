@@ -129,8 +129,12 @@ class LLMModel(BaseModel):
         top_p = kwargs.get("top_p", 0.9)
 
         try:
-            # Import generate function
+            # Import generate function and sampler
             from mlx_lm import generate
+            from mlx_lm.sample_utils import make_sampler
+
+            # Create sampler with temperature and top_p
+            sampler = make_sampler(temp=temperature, top_p=top_p)
 
             # Run generation in thread pool
             loop = asyncio.get_event_loop()
@@ -141,8 +145,7 @@ class LLMModel(BaseModel):
                     self.tokenizer,
                     prompt=prompt,
                     max_tokens=max_tokens,
-                    temp=temperature,
-                    top_p=top_p,
+                    sampler=sampler,
                     verbose=False,
                 ),
             )
@@ -195,8 +198,12 @@ class LLMModel(BaseModel):
         top_p = kwargs.get("top_p", 0.9)
 
         try:
-            # Import stream_generate function
+            # Import stream_generate function and sampler
             from mlx_lm import stream_generate
+            from mlx_lm.sample_utils import make_sampler
+
+            # Create sampler with temperature and top_p
+            sampler = make_sampler(temp=temperature, top_p=top_p)
 
             # Create a queue for streaming
             queue = asyncio.Queue()
@@ -209,8 +216,7 @@ class LLMModel(BaseModel):
                         self.tokenizer,
                         prompt=prompt,
                         max_tokens=max_tokens,
-                        temp=temperature,
-                        top_p=top_p,
+                        sampler=sampler,
                     ):
                         asyncio.run_coroutine_threadsafe(
                             queue.put(chunk), asyncio.get_event_loop()
