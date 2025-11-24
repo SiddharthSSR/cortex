@@ -218,7 +218,7 @@ Create a brief plan (2-4 steps) on how to achieve this goal using the available 
             return f"Action execution failed: {str(e)}"
 
     def _build_react_prompt(self, goal: str) -> str:
-        """Build ReAct-style prompt.
+        """Build ReAct-style prompt with explicit examples.
 
         Args:
             goal: The goal to achieve
@@ -229,34 +229,90 @@ Create a brief plan (2-4 steps) on how to achieve this goal using the available 
         tools_description = self._format_tools()
         history = self.memory.format_history()
 
-        prompt = f"""You are a helpful AI assistant that can use tools to accomplish tasks.
+        prompt = f"""You are a helpful AI assistant that uses tools to accomplish tasks step by step.
 
 Available Tools:
 {tools_description}
 
-To use a tool, respond in this exact format:
-Thought: [your reasoning about what to do next]
-Action: [tool name]
-Action Input: {{"parameter": "value"}}
+CRITICAL FORMAT REQUIREMENTS:
+You MUST respond using this EXACT format with proper JSON for Action Input:
 
-When you have the final answer, respond:
-Thought: [your reasoning]
+Thought: [your reasoning about what to do next]
+Action: [exact tool name]
+Action Input: {{"parameter_name": "parameter_value"}}
+
+IMPORTANT:
+- Action Input MUST be valid JSON with double quotes
+- Use the exact parameter names shown for each tool
+- Include ALL required parameters
+
+TOOL USAGE EXAMPLES (FOLLOW THESE EXACTLY):
+
+Example 1 - calculator tool requires "expression" parameter:
+Thought: I need to calculate 2^10
+Action: calculator
+Action Input: {{"expression": "2**10"}}
+
+Example 2 - python_repl tool requires "code" parameter (NOT "input"):
+Thought: I need to execute Python code to create a list
+Action: python_repl
+Action Input: {{"code": "print([x**2 for x in range(5)])"}}
+
+Example 3 - code_generator tool requires "request" and optional "language":
+Thought: I need to generate a function to add two numbers
+Action: code_generator
+Action Input: {{"request": "Create a function to add two numbers", "language": "python"}}
+
+Example 4 - web_search tool requires "query" and optional "num_results":
+Thought: I need to search for information about Python
+Action: web_search
+Action Input: {{"query": "Python programming tutorial", "num_results": 3}}
+
+Example 5 - finish action requires "answer" parameter:
+Thought: I have the answer, which is 1024
 Action: finish
-Action Input: {{"answer": "your final answer"}}
+Action Input: {{"answer": "1024"}}
+
+COMMON MISTAKES TO AVOID:
+- DO NOT use "input" as parameter name - use the exact names shown above
+- DO NOT forget quotes around string values in JSON
+- DO NOT use single quotes - always use double quotes in JSON
+
+MULTI-STEP WORKFLOW EXAMPLES:
+
+Workflow 1 - Generate and execute code:
+Step 1:
+  Thought: I need to generate a function to add two numbers
+  Action: code_generator
+  Action Input: {{"request": "Create a function called add_numbers that adds two numbers", "language": "python"}}
+  Observation: Success: def add_numbers(a, b):\n    return a + b
+
+Step 2:
+  Thought: Now I have the function code. I need to execute it with values 5 and 3. I'll combine the function definition with a call to it in a single python_repl execution.
+  Action: python_repl
+  Action Input: {{"code": "def add_numbers(a, b):\\n    return a + b\\n\\nresult = add_numbers(5, 3)\\nprint(result)"}}
+  Observation: Success: 8
+
+Step 3:
+  Thought: I got the result which is 8
+  Action: finish
+  Action Input: {{"answer": "8"}}
+
+IMPORTANT: Each python_repl execution is independent! If you generate a function with code_generator, you must include both the function definition AND the function call in the same python_repl code parameter.
 
 Goal: {goal}
 
 {history}
 
-What is your next step? (Remember to use the exact format above)"""
+Now, what is your next step? Follow the exact format shown above."""
 
         return prompt
 
     def _format_tools(self) -> str:
-        """Format available tools for prompt.
+        """Format available tools for prompt with detailed parameter info.
 
         Returns:
-            Formatted tools description
+            Formatted tools description with parameter details
         """
         tools = self.tool_registry.list_tools(enabled_only=True)
 
@@ -265,14 +321,19 @@ What is your next step? (Remember to use the exact format above)"""
 
         tool_descriptions = []
         for tool in tools:
-            params = ", ".join(
-                f"{name}: {param.type}" for name, param in tool.parameters.items()
-            )
+            # Build parameter details
+            param_details = []
+            for name, param in tool.parameters.items():
+                required = "REQUIRED" if param.required else "optional"
+                param_details.append(f'  - {name} ({param.type}, {required}): {param.description}')
+
+            params_str = "\n".join(param_details) if param_details else "  No parameters"
+
             tool_descriptions.append(
-                f"- {tool.name}({params}): {tool.description}"
+                f"{tool.name}:\n  Description: {tool.description}\n  Parameters:\n{params_str}"
             )
 
-        return "\n".join(tool_descriptions)
+        return "\n\n".join(tool_descriptions)
 
     def _parse_llm_response(self, response: str) -> Dict[str, Any]:
         """Parse LLM response into thought, action, and action_input.
