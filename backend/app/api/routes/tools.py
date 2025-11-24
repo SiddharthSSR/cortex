@@ -3,15 +3,18 @@
 import logging
 from typing import List, Dict, Any, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from app.tools import get_tool_registry, initialize_tools
+from app.tools.code_generator import CodeGeneratorTool
+from app.core.llm_service import LLMModel
+from app.config import get_settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Initialize tools on module load
+# Initialize tools on module load (without LLM for now)
 initialize_tools()
 
 
@@ -120,11 +123,12 @@ async def get_tool_info(tool_name: str):
 
 
 @router.post("/tools/execute", response_model=ToolExecutionResponse)
-async def execute_tool(request: ToolExecutionRequest):
+async def execute_tool(request: ToolExecutionRequest, http_request: Request):
     """Execute a tool with given parameters.
 
     Args:
         request: Tool execution request with tool name and parameters
+        http_request: FastAPI request object
 
     Returns:
         Tool execution result
@@ -132,6 +136,26 @@ async def execute_tool(request: ToolExecutionRequest):
     registry = get_tool_registry()
 
     try:
+        # If executing code_generator, ensure it has an LLM
+        if request.tool_name == "code_generator":
+            settings = get_settings()
+            model_registry = http_request.app.state.model_registry
+            model_id = settings.default_model
+
+            # Get or load model
+            if model_id not in model_registry:
+                logger.info(f"Loading model for code generator: {model_id}")
+                model = LLMModel(model_id)
+                await model.load()
+                model_registry[model_id] = model
+            else:
+                model = model_registry[model_id]
+
+            # Set LLM on code generator tool
+            tool = registry.get_tool("code_generator")
+            if isinstance(tool, CodeGeneratorTool):
+                tool.set_llm(model)
+
         result = await registry.execute_tool(request.tool_name, request.parameters)
 
         return ToolExecutionResponse(

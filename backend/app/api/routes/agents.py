@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from app.agents import ReActAgent, AgentResult, AgentStep
 from app.tools import get_tool_registry
+from app.tools.code_generator import CodeGeneratorTool
 from app.core.llm_service import LLMModel
 from app.config import get_settings
 
@@ -89,6 +90,11 @@ async def create_plan(request: AgentPlanRequest, http_request: Request):
         else:
             model = model_registry[model_id]
 
+        # Ensure code generator tool has LLM access
+        code_gen_tool = tool_registry.get_tool("code_generator")
+        if isinstance(code_gen_tool, CodeGeneratorTool):
+            code_gen_tool.set_llm(model)
+
         # Create agent
         agent = ReActAgent(
             llm=model,
@@ -133,6 +139,11 @@ async def execute_agent(request: AgentExecutionRequest, http_request: Request):
             model_registry[model_id] = model
         else:
             model = model_registry[model_id]
+
+        # Ensure code generator tool has LLM access
+        code_gen_tool = tool_registry.get_tool("code_generator")
+        if isinstance(code_gen_tool, CodeGeneratorTool):
+            code_gen_tool.set_llm(model)
 
         # Create agent
         agent = ReActAgent(

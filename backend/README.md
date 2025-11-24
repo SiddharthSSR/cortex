@@ -305,6 +305,85 @@ curl -X POST http://localhost:8000/api/tools/execute \
 }
 ```
 
+#### 4. Code Generator Tool
+Generate code based on natural language descriptions using LLM.
+
+**Capabilities:**
+- Generate code in multiple languages (Python, JavaScript, Go, etc.)
+- Produces production-ready code with:
+  - Proper documentation and docstrings
+  - Type hints and error handling
+  - Detailed comments explaining logic
+  - Example usage code
+- Uses lower temperature (0.3) for more deterministic output
+- Automatically extracts code from markdown blocks
+
+**Supported Languages:**
+- Python (default)
+- JavaScript
+- Go
+- Java
+- Rust
+- Any language the LLM supports
+
+**Example - Generate Factorial Function:**
+```bash
+curl -X POST http://localhost:8000/api/tools/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tool_name": "code_generator",
+    "parameters": {
+      "request": "Create a function to calculate the factorial of a number",
+      "language": "python"
+    }
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "result": "def calculate_factorial(n: int) -> int:\n    \"\"\"\n    Calculate the factorial of a given number.\n    \n    Args:\n        n (int): The number to calculate the factorial for.\n    \n    Returns:\n        int: The factorial of the given number.\n    \n    Raises:\n        ValueError: If the input number is negative.\n    \"\"\"\n    if n < 0:\n        raise ValueError(\"Input number cannot be negative.\")\n    \n    result = 1\n    for i in range(2, n + 1):\n        result *= i\n    \n    return result"
+}
+```
+
+**Example - Generate Binary Search:**
+```bash
+curl -X POST http://localhost:8000/api/tools/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tool_name": "code_generator",
+    "parameters": {
+      "request": "Write a binary search algorithm",
+      "language": "python"
+    }
+  }'
+```
+
+**Use Cases:**
+- Generate boilerplate code quickly
+- Create utility functions on demand
+- Prototype algorithms
+- Generate code snippets for learning
+- **Agent workflows**: Agent can generate code, then execute it with Python REPL
+
+**Agent Integration:**
+The code generator is especially powerful when used by agents:
+```python
+# Agent workflow example:
+# 1. Agent uses code_generator to create a Fibonacci function
+# 2. Agent uses python_repl to execute the generated code
+# 3. Agent returns the result
+
+response = requests.post(
+    "http://localhost:8000/api/agents/execute",
+    json={
+        "goal": "Generate a function to calculate Fibonacci numbers, then use it to find the 10th Fibonacci number",
+        "max_iterations": 15
+    }
+)
+```
+
 ### Tools API Endpoints
 
 #### List All Tools
@@ -409,6 +488,21 @@ print(f"Fibonacci sequence: {fibonacci}")
     }
 )
 print(response.json()['result'])
+
+# Generate code
+response = requests.post(
+    "http://localhost:8000/api/tools/execute",
+    json={
+        "tool_name": "code_generator",
+        "parameters": {
+            "request": "Create a function to check if a string is a palindrome",
+            "language": "python"
+        }
+    }
+)
+generated_code = response.json()['result']
+print("Generated Code:")
+print(generated_code)
 ```
 
 ### Adding Custom Tools
@@ -894,6 +988,7 @@ ruff check app/ --fix
   - Calculator (SymPy-based mathematical expressions)
   - Web Search (DuckDuckGo integration)
   - Python REPL (sandboxed code execution)
+  - Code Generator (LLM-powered code generation in multiple languages)
   - Tool registry and management
   - OpenAI-compatible tool definitions
 - **Agent System**:
