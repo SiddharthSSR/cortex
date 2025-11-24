@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.api.routes import chat, models, health
+from app.api.routes import chat, models, health, tools
 from app.api.websocket import chat as ws_chat
 
 # Configure logging
@@ -67,6 +67,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router, prefix="/api", tags=["Health"])
 app.include_router(models.router, prefix="/api", tags=["Models"])
+app.include_router(tools.router, prefix="/api", tags=["Tools"])
 app.include_router(chat.router, prefix="/api", tags=["Chat"])
 app.include_router(ws_chat.router, prefix="/api", tags=["WebSocket"])
 
