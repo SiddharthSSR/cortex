@@ -1,6 +1,6 @@
 # Cortex - MLX-based AI Platform TODO
 
-## Project Status: Backend Foundation Complete ✅
+## Project Status: Backend Complete (LLM + Tools + Agents) ✅
 
 ---
 
@@ -36,44 +36,49 @@
 - [x] Implement proper error handling
 - [x] Add request validation with Pydantic
 
-### 2.4 Tools & Function Calling System
-- [ ] Design tool registry and schema system
-- [ ] Implement function calling parser for model outputs
-- [ ] Create built-in tools:
-  - [ ] Web search tool
-  - [ ] Calculator tool
+### 2.4 Tools & Function Calling System ✅
+- [x] Design tool registry and schema system
+- [x] Implement function calling parser for model outputs
+- [x] Create built-in tools:
+  - [x] Web search tool (DuckDuckGo)
+  - [x] Calculator tool (SymPy-based)
+  - [x] Python REPL tool (sandboxed execution)
+  - [x] Code generator tool (LLM-powered)
   - [ ] File system operations (read/write/list)
-  - [ ] Code execution sandbox
-  - [ ] Python REPL tool
   - [ ] API request tool (HTTP client)
-- [ ] Create tool execution engine with safety checks
-- [ ] Implement tool result formatting for LLM context
-- [ ] Add tool enable/disable configuration
+- [x] Create tool execution engine with safety checks
+- [x] Implement tool result formatting for LLM context
+- [x] Add tool enable/disable configuration
+- [x] Create OpenAI-compatible tool definitions
 - [ ] Create tool permission system
 
-### 2.5 Agent System
-- [ ] Design agent architecture (ReAct, Chain-of-Thought, etc.)
-- [ ] Implement agent orchestration layer
-- [ ] Create agent types:
-  - [ ] Task planning agent
-  - [ ] Code generation agent
-  - [ ] Research agent
-  - [ ] Data analysis agent
-- [ ] Build agent memory system (short-term, long-term)
-- [ ] Implement agent state management
+### 2.5 Agent System ✅
+- [x] Design agent architecture (ReAct pattern)
+- [x] Implement agent orchestration layer
+- [x] Create ReAct agent with:
+  - [x] Multi-step reasoning
+  - [x] Tool usage and composition
+  - [x] Self-correction capabilities
+  - [x] Goal-oriented problem solving
+- [x] Build agent memory system (execution history tracking)
+- [x] Implement agent state management
+- [x] Add agent observability and logging (full execution traces)
+- [x] Create planning endpoint for task breakdown
+- [x] Enhance ReAct prompt with explicit examples and formatting
+- [ ] Create specialized agent types (code generation, research, data analysis)
 - [ ] Create agent chain/workflow system
-- [ ] Add agent observability and logging
 - [ ] Implement agent fallback and error recovery
 - [ ] Create agent evaluation metrics
 
 ### 2.6 Backend Testing & Optimization
-- [ ] Test model loading and inference
-- [ ] Test tool execution and function calling
-- [ ] Test agent workflows
+- [x] Test model loading and inference
+- [x] Test tool execution and function calling
+- [x] Test agent workflows (basic scenarios)
+- [x] Create API documentation (OpenAPI/Swagger auto-generated)
 - [ ] Optimize memory usage
-- [ ] Add logging and monitoring
-- [ ] Create API documentation (OpenAPI/Swagger)
-- [ ] Performance testing
+- [ ] Add comprehensive logging and monitoring
+- [ ] Performance testing and benchmarking
+- [ ] Advanced agent workflow testing
 
 ---
 

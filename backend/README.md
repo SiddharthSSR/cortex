@@ -845,6 +845,26 @@ response = requests.post(
 
 4. **Model Selection**: Larger models (8B+) perform better for complex reasoning
 
+### ReAct Prompt Engineering
+
+The ReAct agent uses a carefully engineered prompt that includes:
+
+1. **Explicit Format Requirements**: Clear instructions on JSON formatting for tool calls
+2. **Concrete Examples**: Examples for each tool showing exact parameter names and formats
+3. **Common Mistakes**: Warnings about frequent errors (e.g., using "input" instead of "code")
+4. **Multi-Step Workflows**: Complete examples showing how to chain tools together
+5. **Tool Parameter Details**: Each tool shows parameter name, type, required/optional status
+
+**Example from the prompt:**
+```
+Example 2 - python_repl tool requires "code" parameter (NOT "input"):
+Thought: I need to execute Python code to create a list
+Action: python_repl
+Action Input: {"code": "print([x**2 for x in range(5)])"}
+```
+
+This explicit prompting significantly improves agent reliability and reduces formatting errors.
+
 ### Testing Agents
 
 A complete test script is provided:
