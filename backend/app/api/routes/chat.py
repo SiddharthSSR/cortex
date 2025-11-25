@@ -137,14 +137,79 @@ async def chat_completion(request_data: ChatRequest, request: Request):
             )
 
         else:
-            # Regular LLM generation
+            # Direct tool calling mode (without agent)
+            tool_registry = get_tool_registry()
+
+            # Get tool definitions if not provided
+            tools = request_data.tools
+            if tools is None:
+                # Get all enabled tools from registry
+                tools = tool_registry.get_tool_definitions(enabled_only=True)
+
+            # Ensure code generator tool has LLM access
+            code_gen_tool = tool_registry.get_tool("code_generator")
+            if code_gen_tool is not None:
+                from app.tools.code_generator import CodeGeneratorTool
+                if isinstance(code_gen_tool, CodeGeneratorTool):
+                    code_gen_tool.set_llm(model)
+
+            # First LLM call with tools
             response_message = await model.generate(
                 messages=request_data.messages,
-                tools=request_data.tools,
+                tools=tools,
                 temperature=request_data.temperature,
                 max_tokens=request_data.max_tokens,
                 top_p=request_data.top_p,
             )
+
+            # Check if LLM wants to call tools
+            if response_message.tool_calls:
+                logger.info(f"LLM requested {len(response_message.tool_calls)} tool calls")
+
+                # Execute each tool call
+                tool_results = []
+                for tool_call in response_message.tool_calls:
+                    function_name = tool_call.get("function", {}).get("name")
+                    logger.info(f"Executing tool: {function_name}")
+
+                    result = await tool_registry.execute_tool_call(tool_call)
+                    tool_results.append({
+                        "tool_call_id": tool_call.get("id"),
+                        "tool_name": function_name,
+                        "result": result.result if result.success else result.error,
+                        "success": result.success,
+                    })
+
+                # Create tool result message
+                tool_results_text = "\n\n".join([
+                    f"Tool: {tr['tool_name']}\nResult: {tr['result']}"
+                    for tr in tool_results
+                ])
+
+                # Add assistant message with tool calls to conversation
+                messages_with_tools = list(request_data.messages)
+                messages_with_tools.append(Message(
+                    role=MessageRole.ASSISTANT,
+                    content=response_message.content or "I'll use these tools to help you.",
+                    tool_calls=response_message.tool_calls,
+                ))
+
+                # Add tool results as a user message
+                messages_with_tools.append(Message(
+                    role=MessageRole.USER,
+                    content=f"Here are the tool results:\n\n{tool_results_text}\n\nPlease provide a helpful response based on these results.",
+                ))
+
+                # Generate final response with tool results
+                final_response = await model.generate(
+                    messages=messages_with_tools,
+                    tools=None,  # Don't allow more tool calls
+                    temperature=request_data.temperature,
+                    max_tokens=request_data.max_tokens,
+                    top_p=request_data.top_p,
+                )
+
+                response_message = final_response
 
             generation_time = time.time() - start_time
 

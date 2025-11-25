@@ -282,18 +282,60 @@ class LLMModel(BaseModel):
         Returns:
             Formatted tools string
         """
-        tools_desc = "You have access to the following tools:\n\n"
+        if not tools:
+            return ""
+
+        tools_desc = "# Available Tools\n\n"
+        tools_desc += "You have access to the following tools that can help answer the user's question:\n\n"
+
         for tool in tools:
             func = tool.get("function", {})
             name = func.get("name", "")
             description = func.get("description", "")
             parameters = func.get("parameters", {})
 
-            tools_desc += f"- {name}: {description}\n"
-            tools_desc += f"  Parameters: {json.dumps(parameters, indent=2)}\n\n"
+            tools_desc += f"## {name}\n"
+            tools_desc += f"{description}\n\n"
 
-        tools_desc += "\nTo use a tool, respond with JSON in this format:\n"
-        tools_desc += '{"tool": "tool_name", "parameters": {...}}\n'
+            if parameters and "properties" in parameters:
+                tools_desc += "Parameters:\n"
+                for param_name, param_info in parameters["properties"].items():
+                    param_type = param_info.get("type", "string")
+                    param_desc = param_info.get("description", "")
+                    required = param_name in parameters.get("required", [])
+                    req_str = "REQUIRED" if required else "optional"
+                    tools_desc += f"  - {param_name} ({param_type}, {req_str}): {param_desc}\n"
+            tools_desc += "\n"
+
+        tools_desc += """# How to Use Tools
+
+When you need to use a tool to answer the user's question, respond with ONLY a JSON object in this EXACT format:
+{"tool": "tool_name", "parameters": {"param1": "value1", "param2": "value2"}}
+
+IMPORTANT RULES:
+1. Use ONLY valid JSON with double quotes
+2. Put the tool name in the "tool" field
+3. Put all parameters in the "parameters" object
+4. Do NOT include any other text - ONLY the JSON object
+5. Use the EXACT parameter names shown above
+
+# Examples
+
+User asks: "What is 2 + 2?"
+Response: {"tool": "calculator", "parameters": {"expression": "2 + 2"}}
+
+User asks: "Search for Python tutorials"
+Response: {"tool": "web_search", "parameters": {"query": "Python tutorials", "num_results": 5}}
+
+User asks: "Write a hello world function"
+Response: {"tool": "code_generator", "parameters": {"request": "Create a hello world function", "language": "python"}}
+
+# Important
+- If the user asks a question that needs a tool, respond with the JSON
+- If you can answer directly without tools, respond normally with text
+- Choose the most appropriate tool for the task
+
+"""
 
         return tools_desc
 

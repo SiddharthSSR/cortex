@@ -108,7 +108,7 @@ class WebSearchTool(BaseTool):
             return ToolResult(success=False, error=error_msg)
 
     async def _duckduckgo_search(self, query: str, num_results: int) -> list:
-        """Perform DuckDuckGo search via HTML scraping.
+        """Perform DuckDuckGo search using different methods.
 
         Args:
             query: Search query
@@ -118,43 +118,114 @@ class WebSearchTool(BaseTool):
             List of search result dictionaries
         """
         try:
-            url = "https://html.duckduckgo.com/html/"
+            # Use GET request to main search page (more reliable)
+            import urllib.parse
+            encoded_query = urllib.parse.quote_plus(query)
+            url = f"https://duckduckgo.com/html/?q={encoded_query}"
+
             headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
+                "Chrome/121.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.5",
+                "Accept-Encoding": "gzip, deflate, br",
+                "DNT": "1",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1",
+                "Sec-Fetch-Dest": "document",
+                "Sec-Fetch-Mode": "navigate",
+                "Sec-Fetch-Site": "none",
+                "Cache-Control": "max-age=0",
             }
 
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    url, data={"q": query}, headers=headers, follow_redirects=True
-                )
-                response.raise_for_status()
+            async with httpx.AsyncClient(
+                timeout=20.0,
+                follow_redirects=True,
+                http2=True,
+            ) as client:
+                logger.info(f"Fetching search results from: {url}")
+                response = await client.get(url, headers=headers)
+
+                logger.info(f"DuckDuckGo response status: {response.status_code}")
+                logger.info(f"Response content length: {len(response.text)}")
+
+                if response.status_code != 200:
+                    logger.error(f"Non-200 status code: {response.status_code}")
+                    raise Exception(f"DuckDuckGo returned status {response.status_code}")
 
             soup = BeautifulSoup(response.text, "html.parser")
             results = []
 
-            # Parse search results
-            for result_div in soup.find_all("div", class_="result"):
+            # Method 1: Try standard result class
+            result_divs = soup.find_all("div", class_="results_links")
+            logger.info(f"Found {len(result_divs)} result divs with class 'results_links'")
+
+            for result_div in result_divs:
                 if len(results) >= num_results:
                     break
 
-                # Extract title and URL
-                title_elem = result_div.find("a", class_="result__a")
-                if not title_elem:
-                    continue
+                # Try to find title link
+                title_link = result_div.find("a", class_="result__a")
+                if not title_link:
+                    # Alternative: look for any link in result__title
+                    title_container = result_div.find("h2", class_="result__title")
+                    if title_container:
+                        title_link = title_container.find("a")
 
-                title = title_elem.get_text(strip=True)
-                url = title_elem.get("href", "")
+                if title_link:
+                    title = title_link.get_text(strip=True)
+                    url_value = title_link.get("href", "")
 
-                # Extract snippet
-                snippet_elem = result_div.find("a", class_="result__snippet")
-                snippet = (
-                    snippet_elem.get_text(strip=True) if snippet_elem else "No description"
-                )
+                    # Find snippet
+                    snippet = "No description available"
+                    snippet_elem = result_div.find("a", class_="result__snippet")
+                    if snippet_elem:
+                        snippet = snippet_elem.get_text(strip=True)
+                    else:
+                        # Try alternative snippet location
+                        desc_elem = result_div.find("div", class_="result__snippet")
+                        if desc_elem:
+                            snippet = desc_elem.get_text(strip=True)
 
-                if title and url:
-                    results.append({"title": title, "url": url, "snippet": snippet})
+                    if title and url_value:
+                        results.append({
+                            "title": title,
+                            "url": url_value,
+                            "snippet": snippet
+                        })
+                        logger.info(f"Extracted result: {title[:50]}...")
+
+            # Method 2: If no results, try alternative structure
+            if not results:
+                logger.info("Trying alternative parsing method")
+                all_result_divs = soup.find_all("div", class_="result")
+                logger.info(f"Found {len(all_result_divs)} divs with class 'result'")
+
+                for result_div in all_result_divs[:num_results]:
+                    links = result_div.find_all("a", class_="result__a")
+                    if links:
+                        title = links[0].get_text(strip=True)
+                        url_value = links[0].get("href", "")
+
+                        snippet = "No description available"
+                        snippet_elem = result_div.find("a", class_="result__snippet")
+                        if snippet_elem:
+                            snippet = snippet_elem.get_text(strip=True)
+
+                        if title and url_value:
+                            results.append({
+                                "title": title,
+                                "url": url_value,
+                                "snippet": snippet
+                            })
+
+            logger.info(f"Successfully parsed {len(results)} search results")
+
+            if not results:
+                logger.warning("No results found - HTML structure may have changed")
+                # Save HTML for debugging
+                logger.debug(f"HTML content preview: {response.text[:500]}")
 
             return results
 
@@ -162,5 +233,5 @@ class WebSearchTool(BaseTool):
             logger.error(f"HTTP error during DuckDuckGo search: {e}")
             raise Exception(f"Search request failed: {str(e)}")
         except Exception as e:
-            logger.error(f"Error parsing DuckDuckGo results: {e}")
+            logger.error(f"Error during DuckDuckGo search: {e}")
             raise Exception(f"Failed to parse search results: {str(e)}")

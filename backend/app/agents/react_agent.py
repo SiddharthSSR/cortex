@@ -234,6 +234,12 @@ Create a brief plan (2-4 steps) on how to achieve this goal using the available 
 Available Tools:
 {tools_description}
 
+IMPORTANT RULES:
+1. When you get useful information from a tool (especially web_search), IMMEDIATELY use the "finish" action to provide the answer
+2. Do NOT keep searching or taking actions after you have the information needed
+3. The "finish" action is how you provide your final answer to the user
+4. If you run out of iterations without calling "finish", the user will see "I couldn't find an answer"
+
 CRITICAL FORMAT REQUIREMENTS:
 You MUST respond using this EXACT format with proper JSON for Action Input:
 
@@ -268,10 +274,12 @@ Thought: I need to search for information about Python
 Action: web_search
 Action Input: {{"query": "Python programming tutorial", "num_results": 3}}
 
-Example 5 - finish action requires "answer" parameter:
+Example 5 - finish action requires "answer" parameter (use this when you have the final answer):
 Thought: I have the answer, which is 1024
 Action: finish
 Action Input: {{"answer": "1024"}}
+
+CRITICAL: When you get search results from web_search, immediately use the "finish" action to provide the results to the user. Do NOT keep searching or taking other actions.
 
 COMMON MISTAKES TO AVOID:
 - DO NOT use "input" as parameter name - use the exact names shown above
@@ -280,7 +288,24 @@ COMMON MISTAKES TO AVOID:
 
 MULTI-STEP WORKFLOW EXAMPLES:
 
-Workflow 1 - Generate and execute code:
+Workflow 1 - Web search and finish (MOST COMMON):
+Step 1:
+  Thought: The user wants information about Go programming tutorials. I should search the web.
+  Action: web_search
+  Action Input: {{"query": "Go programming tutorial", "num_results": 5}}
+  Observation: Success: 1. Learn Go Programming - Tutorial
+     URL: https://example.com/go-tutorial
+     A comprehensive guide to learning Go programming...
+     2. Go by Example
+     URL: https://gobyexample.com
+     Hands-on introduction to Go using annotated example programs...
+
+Step 2:
+  Thought: Perfect! I found relevant Go tutorials. I should provide these results to the user now.
+  Action: finish
+  Action Input: {{"answer": "Here are some excellent Go programming tutorials:\n\n1. Learn Go Programming - Tutorial (https://example.com/go-tutorial) - A comprehensive guide to learning Go programming\n\n2. Go by Example (https://gobyexample.com) - Hands-on introduction to Go using annotated example programs\n\nThese resources will help you get started with Go programming."}}
+
+Workflow 2 - Generate and execute code:
 Step 1:
   Thought: I need to generate a function to add two numbers
   Action: code_generator
