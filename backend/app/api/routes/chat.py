@@ -8,8 +8,11 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from app.config import get_settings
-from app.schemas.chat import ChatRequest, ChatResponse, StreamChunk
+from app.schemas.chat import ChatRequest, ChatResponse, StreamChunk, Message, MessageRole
 from app.core.llm_service import LLMModel
+from app.agents import ReActAgent
+from app.tools import get_tool_registry
+from app.tools.code_generator import CodeGeneratorTool
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -66,36 +69,97 @@ async def chat_completion(request_data: ChatRequest, request: Request):
     except HTTPException:
         raise
 
+    # Create response
+    response_id = f"chatcmpl-{uuid.uuid4().hex[:8]}"
+    created_at = int(time.time())
+
     # Generate response
     try:
         start_time = time.time()
 
-        response_message = await model.generate(
-            messages=request_data.messages,
-            tools=request_data.tools,
-            temperature=request_data.temperature,
-            max_tokens=request_data.max_tokens,
-            top_p=request_data.top_p,
-        )
+        # Check if agent mode is enabled
+        if request_data.enable_agent:
+            # Use agent for response
+            tool_registry = get_tool_registry()
 
-        generation_time = time.time() - start_time
+            # Ensure code generator tool has LLM access
+            code_gen_tool = tool_registry.get_tool("code_generator")
+            if isinstance(code_gen_tool, CodeGeneratorTool):
+                code_gen_tool.set_llm(model)
 
-        # Create response
-        response_id = f"chatcmpl-{uuid.uuid4().hex[:8]}"
-        created_at = int(time.time())
+            # Create agent
+            agent = ReActAgent(
+                llm=model,
+                tool_registry=tool_registry,
+                max_iterations=10,
+                verbose=True,
+            )
 
-        return ChatResponse(
-            id=response_id,
-            model=model_id,
-            created=created_at,
-            message=response_message,
-            usage={
-                "prompt_tokens": 0,  # MLX-LM doesn't provide token counts
-                "completion_tokens": 0,
-                "total_tokens": 0,
-            },
-            finish_reason="stop",
-        )
+            # Get the user's latest message
+            user_message = request_data.messages[-1].content if request_data.messages else ""
+
+            # Execute agent
+            agent_result = await agent.execute(user_message)
+
+            # Convert agent steps to response format
+            from app.schemas.chat import AgentStep
+            agent_steps = []
+            for step in agent_result.steps:
+                agent_steps.append(
+                    AgentStep(
+                        step_number=step.step_number,
+                        thought=step.thought,
+                        action=step.action,
+                        action_input=step.action_input,
+                        observation=step.observation,
+                        status=step.status.value,
+                    )
+                )
+
+            # Create response message
+            response_message = Message(
+                role=MessageRole.ASSISTANT,
+                content=agent_result.final_answer or "I couldn't find an answer.",
+            )
+
+            return ChatResponse(
+                id=response_id,
+                model=model_id,
+                created=created_at,
+                message=response_message,
+                usage={
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                },
+                finish_reason="stop",
+                agent_steps=agent_steps,
+            )
+
+        else:
+            # Regular LLM generation
+            response_message = await model.generate(
+                messages=request_data.messages,
+                tools=request_data.tools,
+                temperature=request_data.temperature,
+                max_tokens=request_data.max_tokens,
+                top_p=request_data.top_p,
+            )
+
+            generation_time = time.time() - start_time
+
+            return ChatResponse(
+                id=response_id,
+                model=model_id,
+                created=created_at,
+                message=response_message,
+                usage={
+                    "prompt_tokens": 0,  # MLX-LM doesn't provide token counts
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                },
+                finish_reason="stop",
+            )
 
     except Exception as e:
         logger.error(f"Chat completion failed: {e}")

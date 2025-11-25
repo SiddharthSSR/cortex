@@ -37,6 +37,17 @@ class ChatRequest(BaseModel):
     enable_agent: bool = False
 
 
+class AgentStep(BaseModel):
+    """Agent reasoning step."""
+
+    step_number: int
+    thought: str
+    action: Optional[str] = None
+    action_input: Optional[Dict[str, Any]] = None
+    observation: Optional[str] = None
+    status: str = "thinking"
+
+
 class ChatResponse(BaseModel):
     """Chat completion response schema."""
 
@@ -46,6 +57,7 @@ class ChatResponse(BaseModel):
     message: Message
     usage: Optional[Dict[str, int]] = None
     finish_reason: str = "stop"
+    agent_steps: Optional[List[AgentStep]] = None
 
 
 class StreamChunk(BaseModel):
