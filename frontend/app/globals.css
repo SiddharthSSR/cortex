@@ -43,7 +43,7 @@ body {
 
 /* Neo-brutalism specific font styles */
 [data-theme="neo-brutalism"] body {
-  font-family: 'Inter', 'Arial Black', -apple-system, sans-serif;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', -apple-system, sans-serif;
   font-weight: 600;
 }
 
