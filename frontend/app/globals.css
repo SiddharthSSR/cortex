@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* Glassmorphism Theme (Default) */
+:root,
+[data-theme="glassmorphism"] {
   --background: #f5f5f7;
   --foreground: #1d1d1f;
   --blue-message: #007AFF;
@@ -11,7 +13,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root,
+  [data-theme="glassmorphism"] {
     --background: #000000;
     --foreground: #f5f5f7;
     --blue-message: #0A84FF;
@@ -20,12 +23,28 @@
   }
 }
 
+/* Neo-Brutalism Theme */
+[data-theme="neo-brutalism"] {
+  --background: #FFFEF2;
+  --foreground: #000000;
+  --neo-yellow: #FFD23F;
+  --neo-pink: #FF006E;
+  --neo-mint: #06D6A0;
+  --sidebar-bg: #FFFFFF;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Neo-brutalism specific font styles */
+[data-theme="neo-brutalism"] body {
+  font-family: 'Inter', 'Arial Black', -apple-system, sans-serif;
+  font-weight: 600;
 }
 
 @layer utilities {
@@ -118,5 +137,35 @@ body {
 
   .animate-thinking {
     animation: pulse 1s ease-in-out infinite;
+  }
+
+  /* Neo-brutalism specific utilities */
+  [data-theme="neo-brutalism"] .brutal-button {
+    @apply bg-neo-yellow border-[3px] border-black shadow-brutal font-bold uppercase tracking-brutalist;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  [data-theme="neo-brutalism"] .brutal-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 8px 8px 0 #000;
+  }
+
+  [data-theme="neo-brutalism"] .brutal-button:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 4px 4px 0 #000;
+  }
+
+  [data-theme="neo-brutalism"] .brutal-card {
+    @apply bg-white border-[3px] border-black shadow-brutal-lg;
+  }
+
+  [data-theme="neo-brutalism"] .brutal-input {
+    @apply bg-white border-[3px] border-black shadow-brutal;
+  }
+
+  [data-theme="neo-brutalism"] .brutal-input:focus {
+    outline: none;
+    border-color: #FFD23F;
+    box-shadow: 8px 8px 0 #FFD23F;
   }
 }
