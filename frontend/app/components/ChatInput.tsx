@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, KeyboardEvent, useRef, useEffect } from 'react';
+import { useTheme } from '@/app/contexts/ThemeContext';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -10,6 +11,7 @@ interface ChatInputProps {
 }
 
 export default function ChatInput({ onSend, disabled, enableAgent, onAgentToggle }: ChatInputProps) {
+  const { isNeoBrutalism } = useTheme();
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -38,20 +40,32 @@ export default function ChatInput({ onSend, disabled, enableAgent, onAgentToggle
   };
 
   return (
-    <div className="px-4 py-4 bg-gradient-to-t from-white/80 via-white/60 to-transparent dark:from-black/80 dark:via-black/60 backdrop-blur-2xl">
+    <div className={`px-4 py-4 ${
+      isNeoBrutalism
+        ? 'bg-white border-t-[3px] border-black'
+        : 'bg-gradient-to-t from-white/80 via-white/60 to-transparent dark:from-black/80 dark:via-black/60 backdrop-blur-2xl'
+    }`}>
       <div className="max-w-4xl mx-auto">
         {/* Floating Toolbar */}
-        <div className="glass-morphism dark:glass-morphism-dark rounded-[24px] p-3 shadow-2xl">
+        <div className={`p-3 ${
+          isNeoBrutalism
+            ? 'bg-white border-[3px] border-black shadow-brutal'
+            : 'glass-morphism dark:glass-morphism-dark rounded-[24px] shadow-2xl'
+        }`}>
           <div className="flex items-end gap-3">
             {/* Agent Mode Capsule Toggle */}
             {onAgentToggle && (
               <button
                 onClick={() => onAgentToggle(!enableAgent)}
-                className={`flex-shrink-0 px-4 py-2.5 rounded-full font-medium text-sm transition-all duration-300 ${
-                  enableAgent
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white agent-glow dark:agent-glow-dark'
-                    : 'bg-gray-200/80 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 hover:bg-gray-300/80 dark:hover:bg-gray-600/80'
-                } transform hover:scale-105 active:scale-95`}
+                className={`flex-shrink-0 px-4 py-2.5 font-medium text-sm transition-all duration-300 ${
+                  isNeoBrutalism
+                    ? enableAgent
+                      ? 'brutal-button text-black'
+                      : 'bg-neo-gray border-[3px] border-black shadow-brutal text-black hover:-translate-y-0.5 hover:shadow-brutal-lg font-bold uppercase tracking-brutalist'
+                    : enableAgent
+                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white agent-glow dark:agent-glow-dark rounded-full'
+                      : 'bg-gray-200/80 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 hover:bg-gray-300/80 dark:hover:bg-gray-600/80 rounded-full'
+                } ${!isNeoBrutalism && 'transform hover:scale-105 active:scale-95'}`}
               >
                 <div className="flex items-center gap-2">
                   <svg
@@ -76,7 +90,11 @@ export default function ChatInput({ onSend, disabled, enableAgent, onAgentToggle
             )}
 
             {/* Input Container */}
-            <div className="flex-1 flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-[20px] px-4 py-2 border border-gray-200/50 dark:border-gray-700/50">
+            <div className={`flex-1 flex items-center gap-2 px-4 py-2 ${
+              isNeoBrutalism
+                ? 'bg-white border-[3px] border-black shadow-brutal'
+                : 'bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-[20px] border border-gray-200/50 dark:border-gray-700/50'
+            }`}>
               <textarea
                 ref={textareaRef}
                 value={message}
@@ -85,7 +103,11 @@ export default function ChatInput({ onSend, disabled, enableAgent, onAgentToggle
                 placeholder="Message"
                 disabled={disabled}
                 rows={1}
-                className="flex-1 bg-transparent border-none outline-none resize-none text-[15px] placeholder:text-gray-400 dark:placeholder:text-gray-500 disabled:opacity-50"
+                className={`flex-1 bg-transparent border-none outline-none resize-none text-[15px] disabled:opacity-50 ${
+                  isNeoBrutalism
+                    ? 'placeholder:text-gray-500 font-semibold'
+                    : 'placeholder:text-gray-400 dark:placeholder:text-gray-500'
+                }`}
                 style={{ maxHeight: '120px' }}
               />
             </div>
@@ -94,17 +116,25 @@ export default function ChatInput({ onSend, disabled, enableAgent, onAgentToggle
             <button
               onClick={handleSend}
               disabled={disabled || !message.trim()}
-              className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                disabled || !message.trim()
-                  ? 'bg-gray-300 dark:bg-gray-700 opacity-40 cursor-not-allowed'
-                  : 'bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl hover:scale-110 active:scale-95'
+              className={`flex-shrink-0 w-10 h-10 flex items-center justify-center transition-all duration-200 ${
+                isNeoBrutalism
+                  ? disabled || !message.trim()
+                    ? 'bg-neo-gray border-[3px] border-black opacity-40 cursor-not-allowed shadow-brutal'
+                    : 'bg-neo-mint border-[3px] border-black shadow-brutal text-white hover:-translate-y-1 hover:shadow-brutal-lg active:translate-y-0.5 active:shadow-brutal-sm'
+                  : disabled || !message.trim()
+                    ? 'bg-gray-300 dark:bg-gray-700 opacity-40 cursor-not-allowed rounded-full'
+                    : 'bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 rounded-full'
               }`}
-              style={{
-                boxShadow:
-                  !disabled && message.trim()
-                    ? '0 4px 16px rgba(59, 130, 246, 0.4)'
-                    : 'none',
-              }}
+              style={
+                !isNeoBrutalism
+                  ? {
+                      boxShadow:
+                        !disabled && message.trim()
+                          ? '0 4px 16px rgba(59, 130, 246, 0.4)'
+                          : 'none',
+                    }
+                  : undefined
+              }
             >
               <svg
                 className="w-5 h-5"
@@ -124,9 +154,17 @@ export default function ChatInput({ onSend, disabled, enableAgent, onAgentToggle
         </div>
 
         {/* Helper Text */}
-        <div className="text-[11px] text-gray-400 dark:text-gray-600 mt-2 text-center">
+        <div className={`text-[11px] mt-2 text-center ${
+          isNeoBrutalism
+            ? 'text-black font-semibold'
+            : 'text-gray-400 dark:text-gray-600'
+        }`}>
           {enableAgent && (
-            <span className="text-blue-500 dark:text-blue-400 font-medium mr-2">
+            <span className={`font-medium mr-2 ${
+              isNeoBrutalism
+                ? 'text-neo-pink uppercase tracking-wide'
+                : 'text-blue-500 dark:text-blue-400'
+            }`}>
               Agent Mode Active
             </span>
           )}
