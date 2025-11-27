@@ -1,6 +1,6 @@
 # Cortex - MLX-based AI Platform TODO
 
-## Project Status: Backend Complete (LLM + Tools + Agents) ✅
+## Project Status: Backend Complete + Frontend MVP Ready ✅
 
 ---
 
@@ -83,31 +83,31 @@
 ---
 
 ## Phase 3: Frontend Development
-### 3.1 Frontend Foundation
-- [ ] Initialize Next.js 15 project with TypeScript
-- [ ] Set up Tailwind CSS
-- [ ] Configure project structure (components, pages, utils)
-- [ ] Set up environment variables
-- [ ] Configure API client
+### 3.1 Frontend Foundation ✅
+- [x] Initialize Next.js 16 project with TypeScript
+- [x] Set up Tailwind CSS v3
+- [x] Configure project structure (components, pages, utils)
+- [x] Set up environment variables
+- [x] Configure API client
 
-### 3.2 Chat UI Components
-- [ ] Create main chat interface layout
-- [ ] Build message component (user/assistant)
-- [ ] Build input component with textarea
-- [ ] Create model selector dropdown
-- [ ] Add loading states and animations
+### 3.2 Chat UI Components ✅
+- [x] Create main chat interface layout
+- [x] Build message component (user/assistant)
+- [x] Build input component with textarea
+- [x] Create model selector dropdown
+- [x] Add loading states and animations
 - [ ] Implement markdown rendering for responses
 - [ ] Create code block with syntax highlighting
 
-### 3.3 Tools & Agents UI
+### 3.3 Tools & Agents UI ✅
 - [ ] Create tool execution indicator/status
-- [ ] Display tool calls and results in chat
+- [x] Display tool calls and results in chat (basic version)
 - [ ] Build tool selector/configurator panel
 - [ ] Add tool execution logs viewer
-- [ ] Create agent mode toggle
-- [ ] Display agent thinking process (chain-of-thought)
-- [ ] Show agent task breakdown and progress
-- [ ] Implement agent workflow visualization
+- [x] Create agent mode toggle
+- [x] Display agent thinking process (chain-of-thought)
+- [x] Show agent task breakdown and progress
+- [x] Implement agent workflow visualization (AgentThinking component)
 
 ### 3.4 WebSocket Integration
 - [ ] Set up WebSocket client
@@ -118,24 +118,24 @@
 - [ ] Add typing indicators
 - [ ] Implement message history management
 
-### 3.5 Frontend Features
+### 3.5 Frontend Features (Partially Complete)
 - [ ] Add conversation history (local storage)
-- [ ] Implement clear chat functionality
+- [x] Implement clear chat functionality
 - [ ] Add copy message to clipboard
 - [ ] Create settings panel (temperature, max tokens, etc.)
 - [ ] Add tool permissions management UI
 - [ ] Create agent configuration interface
-- [ ] Add dark/light mode toggle
-- [ ] Responsive design for mobile
+- [ ] Add dark/light mode toggle (CSS classes present, needs toggle UI)
+- [x] Responsive design for mobile (basic responsive layout done)
 
 ---
 
-## Phase 4: Integration & Testing
-- [ ] Connect frontend to backend
-- [ ] End-to-end testing of chat functionality
+## Phase 4: Integration & Testing (In Progress)
+- [x] Connect frontend to backend
+- [x] End-to-end testing of chat functionality (basic testing done)
 - [ ] Test streaming responses
 - [ ] Test tool execution flow
-- [ ] Test agent workflows
+- [x] Test agent workflows (basic testing done)
 - [ ] Test error scenarios
 - [ ] Cross-browser testing
 - [ ] Performance optimization

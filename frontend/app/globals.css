@@ -92,6 +92,18 @@ body {
     }
   }
 
+  @keyframes thinking {
+    0%, 20% {
+      content: '.';
+    }
+    40% {
+      content: '..';
+    }
+    60%, 100% {
+      content: '...';
+    }
+  }
+
   .animate-fadeIn {
     animation: fadeIn 0.3s ease-out;
   }
@@ -102,5 +114,9 @@ body {
 
   .animate-pulse-slow {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-thinking {
+    animation: pulse 1s ease-in-out infinite;
   }
 }

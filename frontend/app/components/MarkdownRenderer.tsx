@@ -125,8 +125,8 @@ export default function MarkdownRenderer({ content, isUser = false }: MarkdownRe
         // Tables
         table({ children }) {
           return (
-            <div className="overflow-x-auto my-3">
-              <table className={`min-w-full border-collapse ${
+            <div className="w-full my-3 overflow-y-auto">
+              <table className={`w-full border-collapse ${
                 isUser
                   ? 'border border-white/30'
                   : 'border border-gray-300/60 dark:border-gray-700/60'
@@ -138,7 +138,7 @@ export default function MarkdownRenderer({ content, isUser = false }: MarkdownRe
         },
         th({ children }) {
           return (
-            <th className={`px-3 py-2 text-left font-semibold border ${
+            <th className={`px-3 py-2 text-left font-semibold border break-words ${
               isUser
                 ? 'border-white/30 bg-white/10'
                 : 'border-gray-300/60 dark:border-gray-700/60 bg-gray-100/60 dark:bg-gray-800/60'
@@ -149,7 +149,7 @@ export default function MarkdownRenderer({ content, isUser = false }: MarkdownRe
         },
         td({ children }) {
           return (
-            <td className={`px-3 py-2 border ${
+            <td className={`px-3 py-2 border break-words ${
               isUser
                 ? 'border-white/30'
                 : 'border-gray-300/60 dark:border-gray-700/60'

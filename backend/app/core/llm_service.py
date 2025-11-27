@@ -208,31 +208,39 @@ class LLMModel(BaseModel):
             # Create a queue for streaming
             queue = asyncio.Queue()
 
-            def stream_worker():
+            # Get the current event loop
+            loop = asyncio.get_event_loop()
+
+            def stream_worker(event_loop):
                 """Worker to handle streaming in thread."""
                 try:
-                    for chunk in stream_generate(
+                    for response in stream_generate(
                         self.model,
                         self.tokenizer,
                         prompt=prompt,
                         max_tokens=max_tokens,
                         sampler=sampler,
                     ):
+                        # Extract text from GenerationResponse
+                        if hasattr(response, 'text'):
+                            chunk_text = response.text
+                        else:
+                            chunk_text = str(response)
+
                         asyncio.run_coroutine_threadsafe(
-                            queue.put(chunk), asyncio.get_event_loop()
-                        )
+                            queue.put(chunk_text), event_loop
+                        ).result()
                 except Exception as e:
                     asyncio.run_coroutine_threadsafe(
-                        queue.put({"error": str(e)}), asyncio.get_event_loop()
-                    )
+                        queue.put({"error": str(e)}), event_loop
+                    ).result()
                 finally:
                     asyncio.run_coroutine_threadsafe(
-                        queue.put(None), asyncio.get_event_loop()
-                    )
+                        queue.put(None), event_loop
+                    ).result()
 
             # Start streaming in thread pool
-            loop = asyncio.get_event_loop()
-            loop.run_in_executor(None, stream_worker)
+            loop.run_in_executor(None, stream_worker, loop)
 
             # Yield chunks as they arrive
             full_response = ""
@@ -243,7 +251,8 @@ class LLMModel(BaseModel):
                     # Streaming complete
                     break
 
-                if "error" in chunk:
+                # Check if it's an error dict
+                if isinstance(chunk, dict) and "error" in chunk:
                     yield {"type": "error", "error": chunk["error"]}
                     break
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Message } from '@/app/types/chat';
 import AgentThinking from './AgentThinking';
 import MarkdownRenderer from './MarkdownRenderer';
+import ToolExecutionCard from './ToolExecutionCard';
 
 interface MessageBubbleProps {
   message: Message;
@@ -36,9 +37,9 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3 px-4 animate-slideUp`}>
-      <div className="flex flex-col max-w-[75%]">
+      <div className="flex flex-col max-w-[75%] min-w-0">
         <div
-          className={`relative group px-5 py-3 rounded-[20px] ${
+          className={`relative group px-5 py-3 rounded-[20px] break-words overflow-wrap-anywhere ${
             isUser
               ? 'bg-gradient-to-br from-blue-500/90 to-blue-600/90 dark:from-blue-600/90 dark:to-blue-700/90 text-white backdrop-blur-xl border border-white/20 shadow-lg rounded-br-md'
               : 'bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200/30 dark:border-gray-700/30 text-gray-900 dark:text-gray-100 shadow-md rounded-bl-md'
@@ -47,6 +48,8 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
             boxShadow: isUser
               ? '0 8px 32px rgba(59, 130, 246, 0.3), 0 2px 8px rgba(59, 130, 246, 0.2)'
               : '0 4px 24px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04)',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
           }}
         >
           {/* Copy button */}
@@ -71,38 +74,29 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
           </button>
 
           <div className="text-[15px]">
-            <MarkdownRenderer content={message.content} isUser={isUser} />
+            {message.content === 'Thinking...' ? (
+              <div className="flex items-center gap-2 animate-thinking">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce"></div>
+                  <div
+                    className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '0.1s' }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '0.2s' }}
+                  ></div>
+                </div>
+                <span className="text-blue-600 dark:text-blue-400">Thinking...</span>
+              </div>
+            ) : (
+              <MarkdownRenderer content={message.content} isUser={isUser} />
+            )}
           </div>
 
-          {message.tool_calls && message.tool_calls.length > 0 && (
-            <div className="mt-3 space-y-2">
-              {message.tool_calls.map((tool, idx) => (
-                <div
-                  key={idx}
-                  className={`rounded-2xl p-3 text-sm backdrop-blur-md border ${
-                    isUser
-                      ? 'bg-white/20 border-white/30'
-                      : 'bg-gray-100/50 dark:bg-gray-900/50 border-gray-300/30 dark:border-gray-600/30'
-                  }`}
-                >
-                  <div className="font-semibold flex items-center gap-2 mb-2">
-                    <span className="text-lg">🔧</span>
-                    <span>{tool.tool_name}</span>
-                  </div>
-                  <div className="text-xs opacity-80 font-mono bg-black/10 dark:bg-white/10 rounded-lg p-2">
-                    {JSON.stringify(tool.parameters, null, 2)}
-                  </div>
-                  {tool.result && (
-                    <div className="text-xs opacity-80 mt-2 pt-2 border-t border-current/20">
-                      <div className="font-medium mb-1">Result:</div>
-                      <div className="bg-black/10 dark:bg-white/10 rounded-lg p-2">
-                        {JSON.stringify(tool.result).slice(0, 100)}...
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+          {/* Tool Execution Feedback */}
+          {message.tool_calls && message.tool_calls.length > 0 && !isUser && (
+            <ToolExecutionCard toolCalls={message.tool_calls} />
           )}
 
           {message.agent_steps && message.agent_steps.length > 0 && (

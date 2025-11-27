@@ -52,7 +52,7 @@ export default function CodeBlock({ code, language = 'javascript' }: CodeBlockPr
       </div>
 
       {/* Code content with syntax highlighting */}
-      <div className="overflow-x-auto">
+      <div className="overflow-y-auto max-w-full">
         <SyntaxHighlighter
           language={language}
           style={vscDarkPlus}
@@ -62,6 +62,9 @@ export default function CodeBlock({ code, language = 'javascript' }: CodeBlockPr
             background: 'rgba(17, 24, 39, 0.95)',
             fontSize: '0.875rem',
             lineHeight: '1.5',
+            maxWidth: '100%',
+            overflowWrap: 'break-word',
+            wordBreak: 'break-word',
           }}
           showLineNumbers={true}
           lineNumberStyle={{
@@ -70,6 +73,7 @@ export default function CodeBlock({ code, language = 'javascript' }: CodeBlockPr
             color: '#6b7280',
             userSelect: 'none',
           }}
+          wrapLongLines={true}
         >
           {code}
         </SyntaxHighlighter>

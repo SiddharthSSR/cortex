@@ -21,7 +21,7 @@ export default function MessageList({ messages, isLoading }: MessageListProps) {
   }, [messages]);
 
   return (
-    <div className="min-h-full p-4 space-y-4">
+    <div className="min-h-full p-4 space-y-4 w-full max-w-full overflow-x-hidden">
       {messages.length === 0 ? (
         <div className="flex items-center justify-center min-h-[calc(100vh-200px)] text-gray-500 dark:text-gray-400">
           <div className="text-center">

@@ -1,9 +1,10 @@
 """Web search tool for searching the internet."""
 
 import logging
-from typing import Dict
+from typing import Dict, Optional
 import httpx
 from bs4 import BeautifulSoup
+import os
 
 from app.tools.base_tool import BaseTool, ToolParameter, ToolResult
 
@@ -13,14 +14,21 @@ logger = logging.getLogger(__name__)
 class WebSearchTool(BaseTool):
     """Tool for searching the web."""
 
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: Optional[str] = None):
         """Initialize web search tool.
 
         Args:
-            api_key: Optional API key for search service (e.g., Serper, SerpAPI)
+            api_key: Optional API key for Brave Search or other search service
         """
         super().__init__()
-        self.api_key = api_key
+        # Check for API key in constructor or environment
+        self.api_key = api_key or os.getenv("BRAVE_SEARCH_API_KEY")
+        self.use_brave = bool(self.api_key)
+
+        if self.use_brave:
+            logger.info("Using Brave Search API for web search")
+        else:
+            logger.info("No API key found, using DuckDuckGo fallback")
 
     @property
     def name(self) -> str:
@@ -69,8 +77,13 @@ class WebSearchTool(BaseTool):
         num_results = min(max(1, num_results), 10)
 
         try:
-            # Use DuckDuckGo HTML search (no API key needed)
-            results = await self._duckduckgo_search(query, num_results)
+            # Try Brave Search first if API key is available
+            if self.use_brave:
+                logger.info(f"Using Brave Search for query: {query}")
+                results = await self._brave_search(query, num_results)
+            else:
+                logger.info(f"Using DuckDuckGo fallback for query: {query}")
+                results = await self._duckduckgo_search(query, num_results)
 
             if not results:
                 return ToolResult(
@@ -99,6 +112,7 @@ class WebSearchTool(BaseTool):
                     "query": query,
                     "num_results": len(results),
                     "results": results,
+                    "provider": "brave" if self.use_brave else "duckduckgo",
                 },
             )
 
@@ -106,6 +120,64 @@ class WebSearchTool(BaseTool):
             error_msg = f"Web search failed: {str(e)}"
             logger.error(error_msg)
             return ToolResult(success=False, error=error_msg)
+
+    async def _brave_search(self, query: str, num_results: int) -> list:
+        """Perform search using Brave Search API.
+
+        Args:
+            query: Search query
+            num_results: Number of results to fetch
+
+        Returns:
+            List of search result dictionaries
+        """
+        try:
+            url = "https://api.search.brave.com/res/v1/web/search"
+            headers = {
+                "Accept": "application/json",
+                "Accept-Encoding": "gzip",
+                "X-Subscription-Token": self.api_key,
+            }
+            params = {
+                "q": query,
+                "count": num_results,
+            }
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(url, headers=headers, params=params)
+                response.raise_for_status()
+
+            data = response.json()
+            results = []
+
+            # Parse Brave Search results
+            web_results = data.get("web", {}).get("results", [])
+            for result in web_results[:num_results]:
+                title = result.get("title", "")
+                url_value = result.get("url", "")
+                description = result.get("description", "No description available")
+
+                if title and url_value:
+                    results.append({
+                        "title": title,
+                        "url": url_value,
+                        "snippet": description
+                    })
+
+            logger.info(f"Brave Search returned {len(results)} results")
+            return results
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Brave Search API error: {e.response.status_code}")
+            if e.response.status_code == 401:
+                raise Exception("Invalid Brave Search API key")
+            elif e.response.status_code == 429:
+                raise Exception("Brave Search rate limit exceeded")
+            else:
+                raise Exception(f"Brave Search API error: {e.response.status_code}")
+        except Exception as e:
+            logger.error(f"Brave Search failed: {e}")
+            raise Exception(f"Brave Search failed: {str(e)}")
 
     async def _duckduckgo_search(self, query: str, num_results: int) -> list:
         """Perform DuckDuckGo search using different methods.
@@ -142,7 +214,6 @@ class WebSearchTool(BaseTool):
             async with httpx.AsyncClient(
                 timeout=20.0,
                 follow_redirects=True,
-                http2=True,
             ) as client:
                 logger.info(f"Fetching search results from: {url}")
                 response = await client.get(url, headers=headers)

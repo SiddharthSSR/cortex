@@ -83,19 +83,62 @@ export default function ChatPage() {
     );
 
     try {
-      const response = await apiClient.chat({
-        messages: [...messages, userMessage],
-        model: selectedModel,
-        enable_agent: enableAgent,
-      });
+      // Use streaming for better UX when agent is disabled
+      const useStreaming = !enableAgent;
 
-      const assistantMessage: Message = {
-        ...response.message,
-        timestamp: new Date().toISOString(),
-        agent_steps: response.agent_steps,
-      };
+      if (useStreaming) {
+        // Streaming mode - tokens appear as they're generated
+        const assistantMessage: Message = {
+          role: 'assistant',
+          content: 'Thinking...',
+          timestamp: new Date().toISOString(),
+        };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+        // Add placeholder message immediately for better UX
+        setMessages((prev) => [...prev, assistantMessage]);
+
+        let fullContent = '';
+        let isFirstChunk = true;
+
+        for await (const chunk of apiClient.chatStream({
+          messages: [...messages, userMessage],
+          model: selectedModel,
+          enable_agent: false,
+        })) {
+          // Clear placeholder on first chunk
+          if (isFirstChunk) {
+            fullContent = chunk;
+            isFirstChunk = false;
+          } else {
+            fullContent += chunk;
+          }
+
+          // Update the last message with accumulated content
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            newMessages[newMessages.length - 1] = {
+              ...newMessages[newMessages.length - 1],
+              content: fullContent,
+            };
+            return newMessages;
+          });
+        }
+      } else {
+        // Non-streaming mode - for agent/tool usage
+        const response = await apiClient.chat({
+          messages: [...messages, userMessage],
+          model: selectedModel,
+          enable_agent: enableAgent,
+        });
+
+        const assistantMessage: Message = {
+          ...response.message,
+          timestamp: new Date().toISOString(),
+          agent_steps: response.agent_steps,
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
     } catch (error) {
       console.error('Chat error:', error);
       const errorMessage: Message = {
@@ -140,7 +183,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-[#f0f2f5] via-[#f8f9fa] to-[#e9ecef] dark:from-[#000000] dark:via-[#0a0a0a] dark:to-[#050505]">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-[#f0f2f5] via-[#f8f9fa] to-[#e9ecef] dark:from-[#000000] dark:via-[#0a0a0a] dark:to-[#050505]">
       {/* Frosted Glass Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-50 transition-all duration-500 ease-out ${
@@ -297,12 +340,12 @@ export default function ChatPage() {
 
       {/* Main Content */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-500 ${
+        className={`flex-1 flex flex-col transition-all duration-500 overflow-hidden ${
           sidebarOpen ? 'ml-80' : 'ml-0'
         }`}
       >
         {/* Top Bar with Hamburger */}
-        <div className="glass-morphism dark:glass-morphism-dark border-b border-gray-200/20 dark:border-gray-800/20 px-6 py-4">
+        <div className="glass-morphism dark:glass-morphism-dark border-b border-gray-200/20 dark:border-gray-800/20 px-6 py-4 flex-shrink-0">
           <div className="flex items-center justify-between max-w-5xl mx-auto">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -327,29 +370,14 @@ export default function ChatPage() {
               </div>
             </button>
 
-            {isLoading && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 dark:bg-blue-600/10 rounded-full">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                  <div
-                    className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-                    style={{ animationDelay: '0.1s' }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-                    style={{ animationDelay: '0.2s' }}
-                  ></div>
-                </div>
-                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                  Thinking...
-                </span>
-              </div>
-            )}
+            <div className="text-xs text-gray-400 dark:text-gray-500">
+              {/* Placeholder for spacing */}
+            </div>
           </div>
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
           <MessageList messages={messages} isLoading={isLoading} />
         </div>
 
