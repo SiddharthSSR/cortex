@@ -5,6 +5,7 @@ import { Message, Model } from '@/app/types/chat';
 import { apiClient } from '@/app/lib/api';
 import MessageList from '@/app/components/MessageList';
 import ChatInput from '@/app/components/ChatInput';
+import { useTheme } from '@/app/contexts/ThemeContext';
 
 interface Conversation {
   id: string;
@@ -14,6 +15,7 @@ interface Conversation {
 }
 
 export default function ChatPage() {
+  const { toggleTheme, isNeoBrutalism } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
@@ -183,14 +185,22 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-[#f0f2f5] via-[#f8f9fa] to-[#e9ecef] dark:from-[#000000] dark:via-[#0a0a0a] dark:to-[#050505]">
+    <div className={`flex h-screen overflow-hidden ${
+      isNeoBrutalism
+        ? 'bg-neo-cream'
+        : 'bg-gradient-to-br from-[#f0f2f5] via-[#f8f9fa] to-[#e9ecef] dark:from-[#000000] dark:via-[#0a0a0a] dark:to-[#050505]'
+    }`}>
       {/* Frosted Glass Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-50 transition-all duration-500 ease-out ${
           sidebarOpen ? 'w-80' : 'w-0'
         }`}
       >
-        <div className="h-full glass-morphism dark:glass-morphism-dark border-r border-gray-200/20 dark:border-gray-800/20 overflow-hidden">
+        <div className={`h-full ${
+          isNeoBrutalism
+            ? 'bg-white border-r-[4px] border-black'
+            : 'glass-morphism dark:glass-morphism-dark border-r border-gray-200/20 dark:border-gray-800/20'
+        } overflow-hidden`}>
           {sidebarOpen && (
             <div className="h-full flex flex-col p-5 animate-fadeIn">
               {/* Header */}
@@ -219,7 +229,11 @@ export default function ChatPage() {
                 {/* New Conversation Button */}
                 <button
                   onClick={newConversation}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl font-medium transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] text-sm"
+                  className={`w-full px-4 py-3 text-sm font-medium transition-all ${
+                    isNeoBrutalism
+                      ? 'brutal-button text-black'
+                      : 'bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]'
+                  }`}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <svg
@@ -279,9 +293,13 @@ export default function ChatPage() {
                     <select
                       value={selectedModel}
                       onChange={(e) => setSelectedModel(e.target.value)}
-                      className="w-full px-4 py-3.5 bg-gradient-to-br from-white/60 to-white/40 dark:from-gray-900/60 dark:to-gray-900/40 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all backdrop-blur-sm cursor-pointer appearance-none pr-10 hover:from-white/80 hover:to-white/60 dark:hover:from-gray-900/80 dark:hover:to-gray-900/60 text-gray-800 dark:text-gray-100"
+                      className={`w-full px-4 py-3.5 text-sm font-semibold focus:outline-none transition-all cursor-pointer appearance-none pr-10 ${
+                        isNeoBrutalism
+                          ? 'brutal-input'
+                          : 'bg-gradient-to-br from-white/60 to-white/40 dark:from-gray-900/60 dark:to-gray-900/40 border border-gray-200/50 dark:border-gray-700/50 rounded-2xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 backdrop-blur-sm hover:from-white/80 hover:to-white/60 dark:hover:from-gray-900/80 dark:hover:to-gray-900/60 text-gray-800 dark:text-gray-100'
+                      }`}
                       style={{
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                        boxShadow: isNeoBrutalism ? undefined : '0 2px 8px rgba(0, 0, 0, 0.04)',
                         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", system-ui, sans-serif',
                         letterSpacing: '-0.01em',
                       }}
@@ -322,9 +340,13 @@ export default function ChatPage() {
                 {/* Clear Button */}
                 <button
                   onClick={clearChat}
-                  className="w-full px-4 py-3 bg-gradient-to-br from-red-500/10 to-red-600/10 hover:from-red-500/20 hover:to-red-600/20 text-red-600 dark:text-red-400 rounded-2xl text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 group"
+                  className={`w-full px-4 py-3 text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 group ${
+                    isNeoBrutalism
+                      ? 'bg-neo-pink border-[3px] border-black shadow-brutal text-white hover:-translate-y-0.5 hover:shadow-brutal-lg active:translate-y-0.5 active:shadow-brutal-sm uppercase tracking-brutalist'
+                      : 'bg-gradient-to-br from-red-500/10 to-red-600/10 hover:from-red-500/20 hover:to-red-600/20 text-red-600 dark:text-red-400 rounded-2xl'
+                  }`}
                   style={{
-                    boxShadow: '0 2px 8px rgba(239, 68, 68, 0.1)',
+                    boxShadow: isNeoBrutalism ? undefined : '0 2px 8px rgba(239, 68, 68, 0.1)',
                   }}
                 >
                   <svg className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,7 +367,11 @@ export default function ChatPage() {
         }`}
       >
         {/* Top Bar with Hamburger */}
-        <div className="glass-morphism dark:glass-morphism-dark border-b border-gray-200/20 dark:border-gray-800/20 px-6 py-4 flex-shrink-0">
+        <div className={`${
+          isNeoBrutalism
+            ? 'bg-white border-b-[3px] border-black'
+            : 'glass-morphism dark:glass-morphism-dark border-b border-gray-200/20 dark:border-gray-800/20'
+        } px-6 py-4 flex-shrink-0`}>
           <div className="flex items-center justify-between max-w-5xl mx-auto">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -370,9 +396,29 @@ export default function ChatPage() {
               </div>
             </button>
 
-            <div className="text-xs text-gray-400 dark:text-gray-500">
-              {/* Placeholder for spacing */}
-            </div>
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+                isNeoBrutalism
+                  ? 'brutal-button'
+                  : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {isNeoBrutalism ? (
+                  <>
+                    <span>🌫️</span>
+                    <span className="hidden sm:inline">GLASS</span>
+                  </>
+                ) : (
+                  <>
+                    <span>⚡</span>
+                    <span className="hidden sm:inline">Brutal</span>
+                  </>
+                )}
+              </div>
+            </button>
           </div>
         </div>
 
