@@ -1,6 +1,7 @@
 'use client';
 
 import { ToolCall } from '@/app/types/chat';
+import { useTheme } from '@/app/contexts/ThemeContext';
 
 interface ToolExecutionCardProps {
   toolCalls: ToolCall[];
@@ -52,6 +53,8 @@ const getToolDisplayName = (toolName: string) => {
 };
 
 export default function ToolExecutionCard({ toolCalls }: ToolExecutionCardProps) {
+  const { isNeoBrutalism } = useTheme();
+
   if (!toolCalls || toolCalls.length === 0) return null;
 
   return (
@@ -59,23 +62,43 @@ export default function ToolExecutionCard({ toolCalls }: ToolExecutionCardProps)
       {toolCalls.map((toolCall, index) => (
         <div
           key={toolCall.id || index}
-          className="glass-morphism dark:glass-morphism-dark rounded-xl p-4 border border-blue-200/30 dark:border-blue-700/30"
+          className={`p-4 ${
+            isNeoBrutalism
+              ? 'bg-neo-mint border-[3px] border-black shadow-brutal'
+              : 'glass-morphism dark:glass-morphism-dark rounded-xl border border-blue-200/30 dark:border-blue-700/30'
+          }`}
         >
           <div className="flex items-start gap-3">
             {/* Tool Icon */}
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center ${
+              isNeoBrutalism
+                ? 'bg-black text-neo-yellow border-[2px] border-black'
+                : 'rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-600 dark:text-blue-400'
+            }`}>
               {getToolIcon(toolCall.tool_name)}
             </div>
 
             {/* Tool Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                <span className={`text-sm font-semibold ${
+                  isNeoBrutalism
+                    ? 'text-black font-bold uppercase tracking-wide'
+                    : 'text-gray-900 dark:text-white'
+                }`}>
                   {getToolDisplayName(toolCall.tool_name)}
                 </span>
                 <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className={`w-1.5 h-1.5 animate-pulse ${
+                    isNeoBrutalism
+                      ? 'bg-neo-pink'
+                      : 'rounded-full bg-blue-500'
+                  }`}></div>
+                  <span className={`text-xs ${
+                    isNeoBrutalism
+                      ? 'text-black font-bold uppercase tracking-wide'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}>
                     Executing
                   </span>
                 </div>
@@ -88,10 +111,18 @@ export default function ToolExecutionCard({ toolCalls }: ToolExecutionCardProps)
                     {Object.entries(toolCall.parameters).map(([key, value]) => (
                       <div
                         key={key}
-                        className="px-2 py-1 rounded-md bg-gray-100/60 dark:bg-gray-800/60"
+                        className={`px-2 py-1 ${
+                          isNeoBrutalism
+                            ? 'bg-white border-[2px] border-black font-semibold'
+                            : 'rounded-md bg-gray-100/60 dark:bg-gray-800/60'
+                        }`}
                       >
-                        <span className="text-gray-600 dark:text-gray-400">{key}:</span>{' '}
-                        <span className="text-gray-900 dark:text-white font-mono">
+                        <span className={isNeoBrutalism ? 'text-black' : 'text-gray-600 dark:text-gray-400'}>{key}:</span>{' '}
+                        <span className={`font-mono ${
+                          isNeoBrutalism
+                            ? 'text-black font-bold'
+                            : 'text-gray-900 dark:text-white'
+                        }`}>
                           {typeof value === 'string' && value.length > 30
                             ? value.slice(0, 30) + '...'
                             : String(value)}
@@ -104,8 +135,16 @@ export default function ToolExecutionCard({ toolCalls }: ToolExecutionCardProps)
 
               {/* Result (if available) */}
               {toolCall.result && (
-                <div className="mt-2 p-2 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <div className="text-xs text-green-700 dark:text-green-400 flex items-center gap-1">
+                <div className={`mt-2 p-2 ${
+                  isNeoBrutalism
+                    ? 'bg-neo-mint border-[2px] border-black'
+                    : 'rounded-lg bg-green-500/10 border border-green-500/20'
+                }`}>
+                  <div className={`text-xs flex items-center gap-1 ${
+                    isNeoBrutalism
+                      ? 'text-black font-bold uppercase tracking-wide'
+                      : 'text-green-700 dark:text-green-400'
+                  }`}>
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
