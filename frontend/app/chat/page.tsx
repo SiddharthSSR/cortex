@@ -206,20 +206,34 @@ export default function ChatPage() {
               {/* Header */}
               <div className="mb-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center text-white text-xl font-bold shadow-xl">
+                  <div className={`w-11 h-11 flex items-center justify-center text-xl font-bold ${
+                    isNeoBrutalism
+                      ? 'bg-neo-pink border-[3px] border-black shadow-brutal text-white'
+                      : 'rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white shadow-xl'
+                  }`}>
                     C
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    <h1 className={`text-xl font-bold ${
+                      isNeoBrutalism
+                        ? 'text-black uppercase tracking-tight'
+                        : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'
+                    }`}>
                       Cortex
                     </h1>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                        className={`w-1.5 h-1.5 ${
+                          isNeoBrutalism
+                            ? isConnected ? 'bg-neo-mint' : 'bg-neo-pink'
+                            : isConnected ? 'bg-green-500 animate-pulse rounded-full' : 'bg-red-500 rounded-full'
                         }`}
                       ></div>
-                      <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                      <span className={`text-[10px] font-medium ${
+                        isNeoBrutalism
+                          ? 'text-black font-bold uppercase tracking-wide'
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`}>
                         {isConnected ? 'ONLINE' : 'OFFLINE'}
                       </span>
                     </div>
@@ -256,23 +270,39 @@ export default function ChatPage() {
 
               {/* Conversation Threads */}
               <div className="flex-1 overflow-y-auto mb-4 space-y-2">
-                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3 px-2">
+                <div className={`text-xs font-semibold mb-3 px-2 ${
+                  isNeoBrutalism
+                    ? 'text-black font-bold uppercase tracking-brutalist'
+                    : 'text-gray-500 dark:text-gray-400'
+                }`}>
                   CONVERSATIONS
                 </div>
                 {conversations.map((conv) => (
                   <button
                     key={conv.id}
                     onClick={() => setActiveConversation(conv.id)}
-                    className={`w-full text-left p-3 rounded-xl transition-all ${
-                      conv.id === activeConversation
-                        ? 'bg-gradient-to-br from-blue-500/20 to-purple-500/20 dark:from-blue-600/20 dark:to-purple-600/20 border border-blue-500/30 shadow-sm'
-                        : 'hover:bg-gray-100/50 dark:hover:bg-gray-800/30'
+                    className={`w-full text-left p-3 transition-all ${
+                      isNeoBrutalism
+                        ? conv.id === activeConversation
+                          ? 'bg-neo-yellow border-[3px] border-black shadow-brutal'
+                          : 'bg-white border-[2px] border-black hover:bg-neo-gray hover:-translate-y-0.5'
+                        : conv.id === activeConversation
+                          ? 'bg-gradient-to-br from-blue-500/20 to-purple-500/20 dark:from-blue-600/20 dark:to-purple-600/20 border border-blue-500/30 shadow-sm rounded-xl'
+                          : 'hover:bg-gray-100/50 dark:hover:bg-gray-800/30 rounded-xl'
                     }`}
                   >
-                    <div className="text-sm font-medium text-gray-900 dark:text-white truncate mb-1">
+                    <div className={`text-sm font-medium truncate mb-1 ${
+                      isNeoBrutalism
+                        ? 'text-black font-bold'
+                        : 'text-gray-900 dark:text-white'
+                    }`}>
                       {conv.title}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    <div className={`text-xs truncate ${
+                      isNeoBrutalism
+                        ? 'text-black font-semibold'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>
                       {conv.lastMessage}
                     </div>
                   </button>
@@ -280,10 +310,18 @@ export default function ChatPage() {
               </div>
 
               {/* Settings Section */}
-              <div className="space-y-3 pt-4 border-t border-gray-200/30 dark:border-gray-700/30">
+              <div className={`space-y-3 pt-4 ${
+                isNeoBrutalism
+                  ? 'border-t-[3px] border-black'
+                  : 'border-t border-gray-200/30 dark:border-gray-700/30'
+              }`}>
                 {/* Model Selector */}
                 <div>
-                  <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 dark:text-gray-400 mb-3">
+                  <label className={`flex items-center gap-2 text-xs font-semibold mb-3 ${
+                    isNeoBrutalism
+                      ? 'text-black font-bold uppercase tracking-brutalist'
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
@@ -328,9 +366,21 @@ export default function ChatPage() {
                     </div>
                   </div>
                   {selectedModel && (
-                    <div className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 dark:bg-blue-600/10 rounded-lg">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                      <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                    <div className={`mt-2 flex items-center gap-1.5 px-3 py-1.5 ${
+                      isNeoBrutalism
+                        ? 'bg-neo-mint border-[2px] border-black font-bold uppercase tracking-wide'
+                        : 'bg-blue-500/10 dark:bg-blue-600/10 rounded-lg'
+                    }`}>
+                      <div className={`w-1.5 h-1.5 ${
+                        isNeoBrutalism
+                          ? 'bg-black'
+                          : 'rounded-full bg-blue-500 animate-pulse'
+                      }`}></div>
+                      <span className={`text-xs font-medium ${
+                        isNeoBrutalism
+                          ? 'text-black font-bold'
+                          : 'text-blue-600 dark:text-blue-400'
+                      }`}>
                         Active
                       </span>
                     </div>
