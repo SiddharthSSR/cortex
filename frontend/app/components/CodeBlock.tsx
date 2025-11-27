@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { useTheme } from '@/app/contexts/ThemeContext';
 
 interface CodeBlockProps {
   code: string;
@@ -10,6 +11,7 @@ interface CodeBlockProps {
 }
 
 export default function CodeBlock({ code, language = 'javascript' }: CodeBlockProps) {
+  const { isNeoBrutalism } = useTheme();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -23,15 +25,31 @@ export default function CodeBlock({ code, language = 'javascript' }: CodeBlockPr
   };
 
   return (
-    <div className="relative group my-3 rounded-2xl overflow-hidden backdrop-blur-xl border border-gray-200/30 dark:border-gray-700/30 shadow-lg">
+    <div className={`relative group my-3 overflow-hidden ${
+      isNeoBrutalism
+        ? 'border-[3px] border-black shadow-brutal'
+        : 'rounded-2xl backdrop-blur-xl border border-gray-200/30 dark:border-gray-700/30 shadow-lg'
+    }`}>
       {/* Header with language and copy button */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-800/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-gray-700/50">
-        <span className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
+      <div className={`flex items-center justify-between px-4 py-2 ${
+        isNeoBrutalism
+          ? 'bg-neo-yellow border-b-[3px] border-black'
+          : 'bg-gray-800/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-gray-700/50'
+      }`}>
+        <span className={`text-xs font-semibold uppercase tracking-wider ${
+          isNeoBrutalism
+            ? 'text-black font-bold tracking-brutalist'
+            : 'text-gray-300'
+        }`}>
           {language}
         </span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 text-xs font-medium transition-all duration-200 hover:scale-105 active:scale-95"
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+            isNeoBrutalism
+              ? 'bg-black text-neo-yellow border-[2px] border-black font-bold uppercase hover:-translate-y-0.5'
+              : 'rounded-lg bg-gray-700/50 hover:bg-gray-600/50 text-gray-200 hover:scale-105 active:scale-95'
+          }`}
         >
           {copied ? (
             <>
@@ -59,21 +77,31 @@ export default function CodeBlock({ code, language = 'javascript' }: CodeBlockPr
           customStyle={{
             margin: 0,
             padding: '1rem',
-            background: 'rgba(17, 24, 39, 0.95)',
+            background: isNeoBrutalism ? '#FFFFFF' : 'rgba(17, 24, 39, 0.95)',
             fontSize: '0.875rem',
             lineHeight: '1.5',
             maxWidth: '100%',
             overflowWrap: 'break-word',
             wordBreak: 'break-word',
+            border: isNeoBrutalism ? '2px solid #000000' : 'none',
+            borderTop: isNeoBrutalism ? '3px solid #000000' : 'none',
           }}
           showLineNumbers={true}
           lineNumberStyle={{
             minWidth: '2.5em',
             paddingRight: '1em',
-            color: '#6b7280',
+            color: isNeoBrutalism ? '#000000' : '#6b7280',
             userSelect: 'none',
+            fontWeight: isNeoBrutalism ? '700' : 'normal',
           }}
           wrapLongLines={true}
+          codeTagProps={{
+            style: {
+              color: isNeoBrutalism ? '#000000' : undefined,
+              fontFamily: isNeoBrutalism ? 'monospace' : undefined,
+              fontWeight: isNeoBrutalism ? '600' : undefined,
+            }
+          }}
         >
           {code}
         </SyntaxHighlighter>
