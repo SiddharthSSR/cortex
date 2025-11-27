@@ -5,12 +5,14 @@ import { Message } from '@/app/types/chat';
 import AgentThinking from './AgentThinking';
 import MarkdownRenderer from './MarkdownRenderer';
 import ToolExecutionCard from './ToolExecutionCard';
+import { useTheme } from '@/app/contexts/ThemeContext';
 
 interface MessageBubbleProps {
   message: Message;
 }
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
+  const { isNeoBrutalism } = useTheme();
   const [copied, setCopied] = useState(false);
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
@@ -28,7 +30,11 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
   if (isSystem) {
     return (
       <div className="flex justify-center my-6 px-4 animate-fadeIn">
-        <div className="bg-white/40 dark:bg-black/30 backdrop-blur-md px-4 py-2 rounded-full text-xs text-gray-600 dark:text-gray-400 border border-white/20 dark:border-white/10 shadow-sm">
+        <div className={`px-4 py-2 text-xs ${
+          isNeoBrutalism
+            ? 'bg-neo-gray border-[2px] border-black text-black font-semibold uppercase tracking-wide'
+            : 'bg-white/40 dark:bg-black/30 backdrop-blur-md rounded-full text-gray-600 dark:text-gray-400 border border-white/20 dark:border-white/10 shadow-sm'
+        }`}>
           {message.content}
         </div>
       </div>
@@ -39,15 +45,19 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3 px-4 animate-slideUp`}>
       <div className="flex flex-col max-w-[75%] min-w-0">
         <div
-          className={`relative group px-5 py-3 rounded-[20px] break-words overflow-wrap-anywhere ${
-            isUser
-              ? 'bg-gradient-to-br from-blue-500/90 to-blue-600/90 dark:from-blue-600/90 dark:to-blue-700/90 text-white backdrop-blur-xl border border-white/20 shadow-lg rounded-br-md'
-              : 'bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200/30 dark:border-gray-700/30 text-gray-900 dark:text-gray-100 shadow-md rounded-bl-md'
+          className={`relative group px-5 py-3 break-words overflow-wrap-anywhere ${
+            isNeoBrutalism
+              ? isUser
+                ? 'bg-neo-pink border-[3px] border-black shadow-brutal text-white font-semibold'
+                : 'bg-white border-[3px] border-black shadow-brutal text-black'
+              : isUser
+                ? 'bg-gradient-to-br from-blue-500/90 to-blue-600/90 dark:from-blue-600/90 dark:to-blue-700/90 text-white backdrop-blur-xl border border-white/20 shadow-lg rounded-[20px] rounded-br-md'
+                : 'bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200/30 dark:border-gray-700/30 text-gray-900 dark:text-gray-100 shadow-md rounded-[20px] rounded-bl-md'
           }`}
           style={{
-            boxShadow: isUser
+            boxShadow: isNeoBrutalism ? undefined : (isUser
               ? '0 8px 32px rgba(59, 130, 246, 0.3), 0 2px 8px rgba(59, 130, 246, 0.2)'
-              : '0 4px 24px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04)',
+              : '0 4px 24px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04)'),
             wordBreak: 'break-word',
             overflowWrap: 'break-word',
           }}
